@@ -1,9 +1,15 @@
 class Board
-  
-  def initialize(rows=3, columns=3, symbols_needed=3)
+  attr_accessor :all_rows, :p1_symbol, :p2_symbol, :end_of_game
+  def initialize(rows=3, columns=3, symbols_needed=3, p1_symbol, p2_symbol)
     @rows=rows
     @columns=columns
+    @p1_symbol = p1_symbol
+    @p2_symbol = p2_symbol
+    @p1_symbols_placememt=[]
+    @p2_symbols_placememt=[]
+    @used_field =[]
     @all_rows=[]
+    @end_of_game = false
   end
 
   def build_row
@@ -30,23 +36,88 @@ class Board
       puts row.join
     end
   end
+  
+  def change_symbols(i)
+    symbols = [@p1_symbol,@p2_symbol]
+    return symbols[i]
+  end
 
-  def show_rows
-    p @all_rows
+  def players_move(num_of_player)
+    puts "Player #{num_of_player}: Where do you want to put your symbol?"
+    print "Row: "
+    row = gets.chomp.to_i
+    while !(1..@rows).include?(row)
+      puts "Write number between 1 - #{@rows}."
+      print "Row: "
+      row = gets.chomp.to_i
+    end
+
+    print "Column: "
+    column = gets.chomp.to_i
+    while !(1..@columns).include?(column)
+      puts "Write number between 1 - #{@columns}."
+      print "Column: "
+      column = gets.chomp.to_i
+    end
+    @used_field.push(row.to_s+column.to_s)
+    return [row,column]
+  end
+  
+  def write_symbol(symbol,row_column)
+    if @used_field.count(row_column[0].to_s+row_column[1].to_s)>1
+      puts "That field is already taken. Choose another one."
+      # p @used_field
+      return
+    else
+      @all_rows[row_column[0]-1][row_column[1]*2+1]=symbol
+    end
+    return "Symbol written"
+  end
+  
+  def gameplay
+    num_of_moves=0
+    i=0
+    j=1
+    while num_of_moves<9 do 
+      if @end_of_game
+        break
+      end
+      symbol = write_symbol(change_symbols(i),players_move(i+1))
+      if !symbol
+        next
+      end
+      i=i+1*j
+      j*=-1
+      num_of_moves+=1
+      show_board    
+    end
   end
 end
- 
 
-puts "How many rows do you want in your game of tic-tac-toe?"
-rows = gets.chomp.to_i
+class Player
+  attr_reader :symbol
+  def initialize(symbol)
+    @symbol = symbol
+  end
+end
 
-puts "How many columns do you want in your game of tic-tac-toe?"
-columns=gets.chomp.to_i
+def choose_symbol
+  print "Choose your symbol (x / o): "
+  symbol_p1 = gets.chomp
+  while !["x","o"].include?(symbol_p1)
+    print "Choose your symbol (x / o): "
+    symbol_p1 = gets.chomp
+  end
+  
+  symbol_p1 == "x" ? symbol_p2 = "o" : symbol_p2 = "x"
+  return [symbol_p1, symbol_p2]
+end
 
-puts "How many same symbols are neede for a win?"
-symbols_needed = gets.chomp.to_i
+symbols = choose_symbol
+player1 = Player.new(symbols[0])
+player2 = Player.new(symbols[1])
 
-
-board1 = Board.new(rows, columns, symbols)
+board1 = Board.new(3,3,3,player1.symbol, player2.symbol)
 board1.build_rows
 board1.show_board
+board1.gameplay
