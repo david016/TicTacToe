@@ -1,5 +1,5 @@
 class Board
-  attr_accessor :all_rows, :p1_symbol, :p2_symbol, :end_of_game
+  attr_accessor :all_rows, :p1_symbol, :p2_symbol, :end_of_game, :p1_symbols_placememt, :p2_symbols_placememt
   def initialize(rows=3, columns=3, symbols_needed=3, p1_symbol, p2_symbol)
     @rows=rows
     @columns=columns
@@ -10,6 +10,7 @@ class Board
     @used_field =[]
     @all_rows=[]
     @end_of_game = false
+    @winning_combinations=[["11","12","13"],["21","22","23"], ["31","32","33"], ["11","21","31"], ["12","22","32"], ["13","23","33"], ["11","22","33"], ["13","22","31"]]
   end
 
   def build_row
@@ -59,19 +60,36 @@ class Board
       print "Column: "
       column = gets.chomp.to_i
     end
+    
     @used_field.push(row.to_s+column.to_s)
+    if num_of_player == 1
+      if !@p2_symbols_placememt.include?(row.to_s+column.to_s)
+        @p1_symbols_placememt.push(row.to_s+column.to_s)
+      end
+    else
+      if !@p1_symbols_placememt.include?(row.to_s+column.to_s)
+        @p2_symbols_placememt.push(row.to_s+column.to_s)
+      end
+    end
+    if @winning_combinations.any? {|arr| arr.all?{|el| @p1_symbols_placememt.include?(el)}}
+      @end_of_game=true
+      puts "Player 1 won!"
+    elsif @winning_combinations.any? {|arr| arr.all?{|el| @p1_symbols_placememt.include?(el)}}
+      @end_of_game=true
+      puts "Player 2 won!"
+    end
+
     return [row,column]
   end
   
   def write_symbol(symbol,row_column)
     if @used_field.count(row_column[0].to_s+row_column[1].to_s)>1
       puts "That field is already taken. Choose another one."
-      # p @used_field
       return
     else
       @all_rows[row_column[0]-1][row_column[1]*2+1]=symbol
     end
-    return "Symbol written"
+    return symbol
   end
   
   def gameplay
@@ -90,6 +108,9 @@ class Board
       j*=-1
       num_of_moves+=1
       show_board    
+    end
+    if end_of_game==false
+      puts "Nobody won."
     end
   end
 end
